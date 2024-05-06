@@ -9,23 +9,27 @@ from glob import glob
 from pathlib import Path
 from tqdm import tqdm
 from loguru import logger
+import json
+import sys
 
 from src.utils.data_utils import get_image_crop_resize, get_K_crop_resize
 
 id2name_dict = {
-    1: "ape",
-    2: "benchvise",
-    4: "camera",
-    5: "can",
-    6: "cat",
-    8: "driller",
-    9: "duck",
-    10: "eggbox",
-    11: "glue",
-    12: "holepuncher",
-    13: "iron",
-    14: "lamp",
-    15: "phone",
+    1: "000001",
+    2: "000002",
+    3: "000003",
+    4: "000004",
+    5: "000005",
+    6: "000006",
+    7: "000007",
+    8: "000008",
+    9: "000009",
+    10: "000010",
+    11: "000011",
+    12: "000012",
+    13: "000013",
+    14: "000014",
+    15: "000015",
 }
 
 
@@ -53,6 +57,12 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+def parse_models_info_json(models_info_json_path):
+    models_info_dict = {}
+    with open(models_info_json_path, "r") as f:
+        models_info_dict = json.load(f)
+    return models_info_dict
+
 def parse_models_info_txt(models_info_txt_path):
     models_info_dict = {}
     with open(models_info_txt_path, "r") as f:
@@ -75,16 +85,16 @@ if __name__ == "__main__":
 
     image_seq_dir = osp.join(
         args.data_base_dir,
-        "real_train" if args.split == "train" else "real_test",
+        "train" if args.split == "train" else "test",
         obj_name,
     )
-    model_path = osp.join(args.data_base_dir, "models", obj_name, obj_name + ".ply")
-    models_info_dict = parse_models_info_txt(
-        osp.join(args.data_base_dir, "models", "models_info.txt")
+    model_path = osp.join(args.data_base_dir, "models", "obj_" + obj_name + ".ply")
+    models_info_dict = parse_models_info_json(
+        osp.join(args.data_base_dir, "models", "models_info.json")
     )
     assert osp.exists(image_seq_dir)
 
-    rgb_pths = glob(os.path.join(image_seq_dir, "*-color.png"))
+    rgb_pths = glob(os.path.join(image_seq_dir, "rgb/*.png"))
 
     # Construct output data file structure
     output_data_base_dir = args.output_data_dir
@@ -153,29 +163,49 @@ if __name__ == "__main__":
         copyfile(model_eval_path, osp.join(output_data_obj_dir, "model_eval.ply")) # NOTE: models' units are m
         np.savetxt(osp.join(output_data_obj_dir, "diameter.txt"), np.array([diameter]))
 
+    with open(osp.join(image_seq_dir, "scene_gt.json"), "r") as f:
+        poses = json.load(f)
+
+    with open(osp.join(image_seq_dir, "scene_gt_info.json"), "r") as f:
+        bboxes = json.load(f)
 
     img_id = 0
     for global_id, image_path in tqdm(enumerate(rgb_pths), total=len(rgb_pths)):
-        dataset_img_id, file_label = (
+        dataset_img_id = (
             osp.splitext(image_path)[0].rsplit("/", 1)[1].split("-")
         )
         img_ext = osp.splitext(image_path)[1]
         K = np.array([[572.4114, 0, 325.2611], [0, 573.57043, 242.04899], [0, 0, 1]])
-        pose = np.loadtxt(
-            osp.join(image_seq_dir, "-".join([dataset_img_id, "pose"]) + ".txt")
-        )
+
+        img_id = str(int(dataset_img_id[0]))
+        pose_dic = poses[img_id][0]
+        assert int(args.obj_id) == pose_dic["obj_id"]
+
+        cam_R_m2c = np.array(pose_dic["cam_R_m2c"]).reshape(3, 3)
+        cam_t_m2c = np.array(pose_dic["cam_t_m2c"]).transpose()
+
+        pose = np.eye(4)
+        pose[0:3, 0:3] = cam_R_m2c
+        pose[0:3, -1] = cam_t_m2c
+        # pose = np.loadtxt(
+        #     osp.join(image_seq_dir, "-".join([dataset_img_id, "pose"]) + ".txt")
+        # )
+
         original_img = cv2.imread(image_path)
         img_h,img_w = original_img.shape[:2]
 
         if args.split == 'train':
+            bbox = bboxes[img_id][0]["bbox_obj"]
+            x0, y0, w, h = bbox
+
             # Load GT box directly:
-            x0, y0, w, h = (
-                np.loadtxt(
-                    osp.join(image_seq_dir, "-".join([dataset_img_id, "box"]) + ".txt")
-                )
-                .astype(np.int)
-                .tolist()
-            )
+            # x0, y0, w, h = (
+            #     np.loadtxt(
+            #         osp.join(image_seq_dir, "-".join([dataset_img_id, "box"]) + ".txt")
+            #     )
+            #     .astype(np.int)
+            #     .tolist()
+            # )
             x1, y1 = x0 + w, y0 + h
 
         else:
@@ -195,14 +225,17 @@ if __name__ == "__main__":
                 x1, y1 = x0 + w, y0 + h
 
             else:
+                bbox = bboxes[img_id][0]["bbox_obj"]
+                x0, y0, w, h = bbox
+
                 # Use GT box
-                x0, y0, w, h = (
-                    np.loadtxt(
-                        osp.join(image_seq_dir, "-".join([dataset_img_id, "box"]) + ".txt")
-                    )
-                    .astype(np.int)
-                    .tolist()
-                )
+                # x0, y0, w, h = (
+                #     np.loadtxt(
+                #         osp.join(image_seq_dir, "-".join([dataset_img_id, "box"]) + ".txt")
+                #     )
+                #     .astype(np.int)
+                #     .tolist()
+                # )
                 x1, y1 = x0 + w, y0 + h
 
 
