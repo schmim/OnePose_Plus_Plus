@@ -1,0 +1,19 @@
+torch
+numpy
+# opencv-python
+tqdm
+loguru
+transforms3d
+natsort
+hydra-core
+ray
+scipy
+h5py
+pytorch-lightning
+einops
+kornia
+yacs
+wis3d
+trimesh
+cherrypy
+open3d
