@@ -138,7 +138,7 @@ def import_matches(image_ids, database_path, pairs_path, matches_path, feature_p
             valid = matches > -1
         else:
             matches = match_file[pair]['matches'].__array__()
-            valid = np.ones((matches.shape[0],), dtype=np.bool) # all True
+            valid = np.ones((matches.shape[0],), dtype=bool) # all True
 
         if min_match_score:
             scores = match_file[pair]['matching_scores0'].__array__()
