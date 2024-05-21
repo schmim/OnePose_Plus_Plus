@@ -182,7 +182,7 @@ if __name__ == "__main__":
         assert int(args.obj_id) == pose_dic["obj_id"]
 
         cam_R_m2c = np.array(pose_dic["cam_R_m2c"]).reshape(3, 3)
-        cam_t_m2c = np.array(pose_dic["cam_t_m2c"]).transpose()
+        cam_t_m2c = np.array(pose_dic["cam_t_m2c"]).transpose() / 1000
 
         pose = np.eye(4)
         pose[0:3, 0:3] = cam_R_m2c
