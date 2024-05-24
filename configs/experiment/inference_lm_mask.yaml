@@ -113,7 +113,7 @@ model:
     pnp_reprojection_error: 7
     model_unit: 'm'
     eval_ADD_metric: False
-    pose_thresholds: [1, 2, 3, 5]
+    pose_thresholds: [1, 2, 3, 5, 25@2, 50@5, 500@10]
     use_pycolmap_ransac: False
 
 datamodule:

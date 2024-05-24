@@ -301,8 +301,15 @@ def aggregate_metrics(metrics, pose_thres=[1, 3, 5], proj2d_thres=5):
 
     agg_metric = {}
     for pose_threshold in pose_thres:
-        agg_metric[f"{pose_threshold}cm@{pose_threshold}degree"] = np.mean(
-            (np.array(R_errs) < pose_threshold) & (np.array(t_errs) < pose_threshold)
+        if isinstance(pose_threshold, str):
+            pose_threshold = pose_threshold.split("@")
+
+            pose_threshold_len, pose_threshold_ang = int(pose_threshold[0]), int(pose_threshold[1])
+        else:
+            pose_threshold_len, pose_threshold_ang = pose_threshold, pose_threshold
+
+        agg_metric[f"{pose_threshold_len}cm@{pose_threshold_ang}degree"] = np.mean(
+            (np.array(R_errs) < pose_threshold_ang) & (np.array(t_errs) < pose_threshold_len)
         )
 
     if "ADD_metric" in metrics:
