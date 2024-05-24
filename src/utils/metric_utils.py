@@ -162,7 +162,7 @@ def ransac_PnP(
         # Make inliers:
         inliers = ret['inliers']
         if len(inliers) == 0:
-            inliers = np.array([]).astype(np.bool)
+            inliers = np.array([]).astype(bool)
         else:
             index = np.arange(0, len(pts_3d))
             inliers = index[inliers]
@@ -195,13 +195,13 @@ def ransac_PnP(
             pose_homo = np.concatenate([pose, np.array([[0, 0, 0, 1]])], axis=0)
 
             if inliers is None:
-                inliers = np.array([]).astype(np.bool)
+                inliers = np.array([]).astype(bool)
             state = True
 
             return pose, pose_homo, inliers, state
         except cv2.error:
             state = False
-            return np.eye(4)[:3], np.eye(4), np.array([]).astype(np.bool), state
+            return np.eye(4)[:3], np.eye(4), np.array([]).astype(bool), state
 
 
 @torch.no_grad()
@@ -272,7 +272,7 @@ def compute_query_pose_errors(
         if query_pose_pred is None:
             data["R_errs"].append(np.inf)
             data["t_errs"].append(np.inf)
-            data["inliers"].append(np.array([]).astype(np.bool))
+            data["inliers"].append(np.array([]).astype(bool))
             if "ADD" in data:
                 data['ADD'].append(False)
         else:
