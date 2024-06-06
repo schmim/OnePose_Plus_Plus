@@ -6,6 +6,8 @@ import json
 import numpy as np
 import cv2
 
+from src.utils.data_utils import get_image_crop_resize, get_K_crop_resize
+
 
 def main():
 
@@ -71,6 +73,9 @@ def main():
         gt_json = obj_path / "scene_gt.json"
         gt_dict = json.load(open(gt_json, encoding="utf-8"))
 
+        gt_info_json = obj_path / "scene_gt_info.json"
+        gt_info_dict = json.load(open(gt_info_json, encoding="utf-8"))
+
         training_range_path = obj_path / "training_range.txt"
         with open(training_range_path, "r", encoding="utf-8") as file:
             train_ids = [int(line.strip()) for line in file]
@@ -89,14 +94,27 @@ def main():
             mask = cv2.imread(str(mask_path), cv2.IMREAD_GRAYSCALE)
             masked_image = cv2.bitwise_and(i, i, mask=mask)
 
-            cv2.imwrite(
-                str(image_out_dir[out_index] / f"{image_num}.png"), masked_image
-            )
-
             intin_matrix = np.array(camera_dict[str(image_num)]["cam_K"]).reshape(3, 3)
+
+            bbox = gt_info_dict[str(image_num)][0]["bbox_obj"]
+            x0, y0, w, h = bbox
+            x1, y1 = x0 + w, y0 + h
+
+            # Crop image by 2D visible bbox, and change K
+            box = np.array([x0, y0, x1, y1])
+            resize_shape = np.array([y1 - y0, x1 - x0])
+            K_crop, K_crop_homo = get_K_crop_resize(box, intin_matrix, resize_shape)
+            image_crop, _ = get_image_crop_resize(i, box, resize_shape)
+
+            box_new = np.array([0, 0, x1 - x0, y1 - y0])
+            resize_shape = np.array([256, 256])
+            K_crop, K_crop_homo = get_K_crop_resize(box_new, K_crop, resize_shape)
+            image_crop, _ = get_image_crop_resize(image_crop, box_new, resize_shape)
+
+            cv2.imwrite(str(image_out_dir[out_index] / f"{image_num}.png"), image_crop)
             np.savetxt(
                 os.path.join(intrin_out_dir[out_index], f"{image_num}.txt"),
-                intin_matrix,
+                K_crop,
             )
 
             pose_matrix = np.eye(4)
@@ -110,6 +128,7 @@ def main():
                 os.path.join(poses_out_dir[out_index], f"{image_num}.txt"),
                 pose_matrix,
             )
+
         # bbox
         models_info_json = lm_path / "models" / "models_info.json"
         models_info_dict = json.load(open(models_info_json, encoding="utf-8"))
