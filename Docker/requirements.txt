@@ -1,6 +1,7 @@
 torch
 numpy
 # opencv-python
+opencv-python-headless
 tqdm
 loguru
 transforms3d
@@ -9,7 +10,7 @@ hydra-core
 ray
 scipy
 h5py
-pytorch-lightning
+pytorch-lightning==1.5.10
 einops
 kornia
 yacs
@@ -17,3 +18,9 @@ wis3d
 trimesh
 cherrypy
 open3d
+wheel
+timm
+plyfile
+pycolmap==0.4.0
+
+matplotlib==3.6.3
