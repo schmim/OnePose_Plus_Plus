@@ -41,7 +41,7 @@ RUN cd colmap && \
     git reset --hard ${COLMAP_VERSION} && \
     mkdir build && \
     cd build && \
-    cmake .. -GNinja -DGUI_ENABLED=OFF -DCMAKE_CUDA_ARCHITECTURES=52 && \
+    cmake .. -GNinja -DGUI_ENABLED=OFF -DCMAKE_CUDA_ARCHITECTURES=61 && \
     ninja && \
     ninja install && \
     cd .. && rm -rf colmap

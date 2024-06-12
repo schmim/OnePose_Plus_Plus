@@ -1,4 +1,17 @@
 # OnePose++: Keypoint-Free One-Shot Object Pose Estimation without CAD Models
+
+## Changes from the original code
+
+- add Dockerfile to build a Container to run OnePose++
+- add/update parse and config files to run OnePose++ on other datasets
+- add feature to calculate pose thresholds metric with different values for translation and rotation
+
+## Run OnePose++
+
+To run OnePose++ follow the Instructions below. For the installation a Dockerfile to build a Container is provided. It can be the `np.bool` has to be replaced to `bool` in the submoduls because of a newer version of numpy.
+
+---
+
 ### [Project Page](https://zju3dv.github.io/onepose_plus_plus) | [Paper](https://openreview.net/pdf?id=BZ92dxDS3tO)
 <br/>
 
